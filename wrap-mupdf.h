@@ -76,6 +76,18 @@ MUPDF_WRAP(mupdf_drop_stream, void*, NULL,
 MUPDF_WRAP(mupdf_count_pages, int, -1,
     ret = fz_count_pages(ctx, doc),
     fz_document *doc)
+MUPDF_WRAP(mupdf_load_object, pdf_obj*, NULL,  // This initially worked, but returns an object that references the trailer rather than the actual trailer data. 
+    ret =  pdf_load_object(ctx, doc, xref_num),
+    fz_document *doc, int xref_num)
+// MUPDF_WRAP(mupdf_pdf_trailer, pdf_obj*, NULL,
+//     ret = pdf_trailer(ctx, doc),
+//     fz_document *doc)
+
+// Can't actually use this and to call the handler function of `mutool show <file.pdf> trailer` directly since it's a c file without a header file. Was silly for me to try, TODO delete.
+// MUPDF_WRAP(mupdf_pdfshow_main, int, 0,
+//     ret = pdfshow_main(argc, argv),
+//     int argc, char **argv)
+
 MUPDF_WRAP(mupdf_layout_document, void*, NULL,
     { fz_layout_document(ctx, doc, w, h, em); ret = (void*) -1; },
     fz_document *doc, float w, float h, float em)

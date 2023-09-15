@@ -121,6 +121,44 @@ fz_image *fz_keep_image(fz_context *, fz_image *);
 void fz_drop_image(fz_context *, fz_image *);
 fz_pixmap *fz_load_png(fz_context *, const unsigned char *, size_t);
 int fz_runetochar(char *, int);
+typedef struct pdf_obj_s pdf_obj;
+struct pdf_obj_s {
+  short refs;
+  unsigned char kind;
+  unsigned char flags;
+}
+typedef struct fz_buffer_s fz_buffer;  // TODO maybe unncessary as fz_buffer_is not defined yet already used?
+struct fz_buffer_s {
+	int refs;
+	unsigned char *data;
+	size_t cap, len;
+	int unused_bits;
+	int shared;
+}
+
+
+typedef void (fz_output_write_fn)(fz_context *ctx, void *state, const void *data, size_t n);
+typedef void (fz_output_seek_fn)(fz_context *ctx, void *state, int64_t offset, int whence);
+typedef int64_t (fz_output_tell_fn)(fz_context *ctx, void *state);
+typedef void (fz_output_close_fn)(fz_context *ctx, void *state);
+typedef void (fz_output_drop_fn)(fz_context *ctx, void *state);
+typedef fz_stream *(fz_stream_from_output_fn)(fz_context *ctx, void *state);
+typedef void (fz_truncate_fn)(fz_context *ctx, void *state);
+typedef struct fz_output_s fz_output;
+struct fz_output_s { // TODO not sure how to use this nor where/how fz_buffer_s is somehow defined
+	void *state;
+	fz_output_write_fn *write;
+	fz_output_seek_fn *seek;
+	fz_output_tell_fn *tell;
+	fz_output_close_fn *close;
+	fz_output_drop_fn *drop;
+	fz_stream_from_output_fn *as_stream;
+	fz_truncate_fn *truncate;
+	char *bp, *wp, *ep;
+	int buffered;
+	int bits;
+};
+
 typedef struct fz_annot_s fz_annot;
 struct fz_annot_s {
   int refs;
@@ -187,6 +225,13 @@ int fz_needs_password(fz_context *, fz_document *);
 int fz_authenticate_password(fz_context *, fz_document *, const char *);
 void fz_drop_document(fz_context *, fz_document *);
 int mupdf_count_pages(fz_context *, fz_document *);
+void *mupdf_load_object(fz_context *, fz_document *, int);
+int mupdf_pdfshow_main(int, char **);
+pdf_obj *mupdf_trailer(fz_context *, fz_document *);
+pdf_obj *pdf_resolve_indirect(fz_context *, pdf_obj *);
+fz_buffer *fz_new_buffer(fz_context *, size_t);
+
+
 void *mupdf_layout_document(fz_context *, fz_document *, float, float, float);
 int fz_lookup_metadata(fz_context *, fz_document *, const char *, char *, int);
 int fz_resolve_link(fz_context *, fz_document *, const char *, float *, float *);

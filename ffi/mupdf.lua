@@ -205,6 +205,58 @@ function document_mt.__index:getPages()
     return pages
 end
 
+--[[
+Returns the contents of an indexed PDF xref object, such as the final 'trailer' xref using -1.
+--]]
+function document_mt.__index:getXrefObject(num)
+    local logger = require("logger")
+    logger.warn("test1abc")
+    local obj = W.mupdf_load_object(context(), self.doc, num)
+    logger.warn("test2abc")
+    return obj
+end
+
+function mupdf.getPdfTrailer(filename)
+    local mupdf_doc = {
+        doc = W.mupdf_open_document(context(), filename),
+        filename = filename,
+    }
+
+    if mupdf_doc.doc == nil then
+        merror("MuPDF cannot open file.")
+    end
+
+    -- doc is a cdata<fz_document *>, attach a finalizer to it to release ressources on garbage collection
+    mupdf_doc.doc = ffi.gc(mupdf_doc.doc, mupdf.fz_document_gc)
+
+    setmetatable(mupdf_doc, document_mt)
+
+    -- mupdf_doc:
+
+    -- Mirrored in functionality from https://github.com/pymupdf/PyMuPDF/blob/6b7286eb9d6a99125e21b2ad82910a63773c9602/src/extra.i#L1333-L1354 and the functions it calls
+
+    -- local xref_num = -1
+    -- local obj
+    -- if xref_num == -1 then
+    --     obj = mupdf_doc:getPdfTrailer()  -- returns a reference to the xref object, not the actual data
+    -- else
+    --     obj = mupdf_doc:getXrefObject(xref_num)  -- this won't accept -1 but accepts e.g. 1, but not useful for PDF ID
+    -- end
+    --[[  returns:
+        struct pdf_obj
+        {
+            short refs;
+            unsigned char kind;
+            unsigned char flags;
+        };
+    --]]
+
+    -- JM_object_to_buffer
+    -- local res = mupdf_doc:fz_new_buffer(512)
+    -- TODO
+
+end
+
 function document_mt.__index:isDocumentReflowable()
     if self.is_reflowable then return self.is_reflowable end
     self.is_reflowable = M.fz_is_document_reflowable(context(), self.doc) == 1
